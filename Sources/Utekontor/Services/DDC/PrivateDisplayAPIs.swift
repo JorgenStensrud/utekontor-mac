@@ -17,6 +17,11 @@ enum PrivateDisplayAPIs {
         RTLD_LAZY
     )
 
+    private static let ioKitHandle = dlopen(
+        "/System/Library/Frameworks/IOKit.framework/IOKit",
+        RTLD_LAZY
+    )
+
     private static func load<T>(_ name: String, handle: UnsafeMutableRawPointer?) -> T? {
         guard let symbol = dlsym(handle, name) else {
             return nil
@@ -26,12 +31,12 @@ enum PrivateDisplayAPIs {
 
     static let createIOAVServiceWithService: CreateIOAVServiceFn? = load(
         "IOAVServiceCreateWithService",
-        handle: nil
+        handle: ioKitHandle
     )
 
     static let writeI2C: WriteI2CFn? = load(
         "IOAVServiceWriteI2C",
-        handle: nil
+        handle: ioKitHandle
     )
 
     static let getBrightness: GetBrightnessFn? = load(
