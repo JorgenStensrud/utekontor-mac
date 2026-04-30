@@ -1,0 +1,17 @@
+# Xcode / build
+.derived/
+.build/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+
+# SwiftPM
+.swiftpm/
+
+# Local app symlink / install artifacts
+DisplayCtl.app
+Utekontor.app
+dist/
+
+# macOS
+.DS_Store
