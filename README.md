@@ -1,5 +1,9 @@
 # Utekontor
 
+<p align="center">
+  <img src="Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-256.png" width="128" height="128" alt="Utekontor app icon">
+</p>
+
 Small native macOS menu bar app for:
 
 - XDR boost toggle on likely supported displays
