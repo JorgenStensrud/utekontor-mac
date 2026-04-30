@@ -4,88 +4,114 @@
   <img src="Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-256.png" width="128" height="128" alt="Utekontor app icon">
 </p>
 
-Small native macOS menu bar app for:
+Small native **macOS menu bar** app for brightness, XDR boost, and one external display over DDC—**free** and **open source** (MIT). See [Acknowledgments](#acknowledgments) for prior art (credit only; no bundled third-party code).
 
-- XDR boost toggle on likely supported displays
-- built-in Mac brightness control
-- one external monitor brightness slider over DDC
-- one-way internal-to-external brightness sync
-- optional XDR auto-off timer
-- proper `.app` packaging for reliable menu bar launch
+---
 
-Utekontor is **free** and **open source** (MIT). It covers a small slice of what commercial tools often charge for; see [Acknowledgments](#acknowledgments) for the open-source projects that informed the approach (credit only—no bundled code, no affiliation).
+## Installation (Homebrew)
 
-## Current scope
-
-- Apple Silicon first
-- one external display only
-- real `.app` built with `xcodebuild`
-- no Xcode IDE required
-
-## Build
-
-```bash
-cd /path/to/utekontor-mac
-mkdir -p /tmp/clangcache
-CLANG_MODULE_CACHE_PATH=/tmp/clangcache swift build
-```
-
-## Build app
-
-```bash
-cd /path/to/utekontor-mac
-./Scripts/package_app.sh
-open Utekontor.app
-```
-
-Default output (Debug):
-
-```text
-./.derived/Build/Products/Debug/Utekontor.app
-```
-
-Convenience symlink at repo root:
-
-```text
-./Utekontor.app
-```
-
-Build Release and open:
-
-```bash
-UTEKONTOR_CONFIGURATION=Release UTEKONTOR_OPEN_AFTER_BUILD=1 ./Scripts/package_app.sh
-```
-
-## Install to `/Applications`
-
-After a successful `./Scripts/package_app.sh`:
-
-```bash
-./Scripts/install_to_applications.sh
-```
-
-Override destination or configuration:
-
-```bash
-UTEKONTOR_INSTALL_DIR="$HOME/Applications" UTEKONTOR_CONFIGURATION=Release ./Scripts/install_to_applications.sh
-```
-
-## GitHub releases and Homebrew
-
-Build the zip used for releases and the Homebrew cask:
-
-```bash
-./Scripts/release_zip.sh
-```
-
-Maintainers: attach `dist/Utekontor-<version>.zip` to a [GitHub Release](https://github.com/JorgenStensrud/utekontor-mac/releases) with tag `v` plus the cask version (for example `v0.1.0`). Update `version` and `sha256` in `Casks/utekontor.rb` when the zip changes (`shasum -a 256` on the exact file you upload).
-
-Users install from this repo as a tap:
+If you use [Homebrew](https://brew.sh), you do **not** need to build anything or copy the app into `Applications` by hand. The cask installs **`Utekontor.app` into `/Applications`** for you (Homebrew’s default app location).
 
 ```bash
 brew tap JorgenStensrud/utekontor-mac https://github.com/JorgenStensrud/utekontor-mac
 brew install --cask utekontor
 ```
+
+To install only for your user (optional):
+
+```bash
+brew install --cask --appdir="$HOME/Applications" utekontor
+```
+
+**First launch:** open **Utekontor** from **Applications** (or Spotlight). If macOS blocks the app because it is not from the Mac App Store, use **System Settings → Privacy & Security** and choose **Open Anyway** once (typical for small OSS binaries that are not Apple-notarized).
+
+---
+
+## How to use Utekontor
+
+1. Launch **Utekontor**; it runs as a **menu bar** app (no Dock icon by design).
+2. Click the **sun / status icon** in the menu bar to open the menu and sliders.
+3. Optional: **System Settings → General → Login Items** — add Utekontor if you want it at login.
+
+**What it can do (today):**
+
+- Toggle **XDR boost** on supported built-in displays (best-effort).
+- Adjust **built-in Mac brightness**.
+- One **external monitor** brightness slider over **DDC** (Apple Silicon; first external display only).
+- **Sync** built-in brightness toward the external display (one-way).
+- Optional **XDR auto-off** timer.
+
+**Limitations:** Apple Silicon–first workflow; one external display; DDC varies by cable, dock, and monitor. See [Notes](#notes) below.
+
+---
+
+## Build from source (development)
+
+Use this path if you are **hacking on the repo** or want a build without Homebrew. You need a recent **Xcode** (or at least Xcode Command Line Tools with a Swift toolchain that matches the project), and **macOS 13+** to match the deployment target.
+
+### Clone
+
+```bash
+git clone https://github.com/JorgenStensrud/utekontor-mac.git
+cd utekontor-mac
+```
+
+### Quick compile check (SwiftPM)
+
+Does **not** produce the recommended menu-bar `.app`; useful for CI or editor tooling:
+
+```bash
+mkdir -p /tmp/clangcache
+CLANG_MODULE_CACHE_PATH=/tmp/clangcache swift build
+```
+
+### Build the real `.app` (what you should run locally)
+
+Uses **`xcodebuild`** and writes under `.derived/`, with a repo-root symlink **`Utekontor.app`**:
+
+```bash
+./Scripts/package_app.sh
+open Utekontor.app
+```
+
+Debug output path:
+
+```text
+./.derived/Build/Products/Debug/Utekontor.app
+```
+
+Release build and open after a successful build:
+
+```bash
+UTEKONTOR_CONFIGURATION=Release UTEKONTOR_OPEN_AFTER_BUILD=1 ./Scripts/package_app.sh
+```
+
+### Copy your dev build into Applications (optional)
+
+Only if **you** want your **self-built** app in `/Applications` while developing—**not** required for Homebrew users.
+
+```bash
+./Scripts/package_app.sh
+./Scripts/install_to_applications.sh
+```
+
+Override folder or configuration:
+
+```bash
+UTEKONTOR_INSTALL_DIR="$HOME/Applications" UTEKONTOR_CONFIGURATION=Release ./Scripts/install_to_applications.sh
+```
+
+---
+
+## Maintainers: releases and Homebrew checksum
+
+```bash
+./Scripts/release_zip.sh
+```
+
+Attach `dist/Utekontor-<version>.zip` to a [GitHub Release](https://github.com/JorgenStensrud/utekontor-mac/releases) whose tag is `v` plus the cask version (e.g. `v0.1.0`). Update `version` and `sha256` in `Casks/utekontor.rb` to match the uploaded zip (`shasum -a 256` on that file).
+
+---
 
 ## Acknowledgments
 
@@ -98,9 +124,8 @@ Utekontor is independent software. The following **open-source** macOS display p
 ## Notes
 
 - The XDR path is intentionally minimal; see [Acknowledgments](#acknowledgments).
-- The DDC path currently assumes Apple Silicon and uses the first external `DCPAVServiceProxy` it can open.
-- Expect monitor-specific variation. Some docks and cables do not pass DDC reliably.
-- The preferred launch flow is the `xcodebuild`-produced `.app` (repo-root `Utekontor.app` symlink), not the raw SwiftPM binary, because macOS menu bar apps attach more reliably that way.
+- The DDC path assumes Apple Silicon and uses the first external `DCPAVServiceProxy` it can open.
+- For **local development**, prefer opening the **`xcodebuild`** `.app` (`./Utekontor.app` after `./Scripts/package_app.sh`) rather than only the raw SwiftPM binary, so the menu bar session behaves reliably.
 
 ## License
 
