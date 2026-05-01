@@ -9,6 +9,7 @@ struct MenuContentState {
     let internalBrightnessEnabled: Bool
     let externalBrightness: Double
     let externalBrightnessEnabled: Bool
+    let xdrLevel: Double
     let xdrAutoOffDuration: TimeInterval?
     let xdrAutoOffLabel: String
     let xdrAutoOffCountdownActive: Bool

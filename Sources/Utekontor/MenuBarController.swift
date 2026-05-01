@@ -2,12 +2,16 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class MenuBarController: NSObject {
+final class MenuBarController: NSObject, NSPopoverDelegate {
     private let onToggleXDR: () -> Void
     private let onInternalBrightnessChanged: (Double) -> Void
     private let onExternalBrightnessChanged: (Double) -> Void
+    private let onXDRLevelChanged: (Double) -> Void
     private let onToggleSync: () -> Void
     private let onSelectXDRAutoOffDuration: (TimeInterval?) -> Void
+    private let onPopoverWillShow: () -> Void
+    private let onPopoverDidClose: () -> Void
+    private let onShowAbout: () -> Void
     private let onQuit: () -> Void
 
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -22,6 +26,7 @@ final class MenuBarController: NSObject {
         internalBrightnessEnabled: false,
         externalBrightness: 0.7,
         externalBrightnessEnabled: false,
+        xdrLevel: 0.7,
         xdrAutoOffDuration: nil,
         xdrAutoOffLabel: "Auto-off: Off",
         xdrAutoOffCountdownActive: false
@@ -31,15 +36,23 @@ final class MenuBarController: NSObject {
         onToggleXDR: @escaping () -> Void,
         onInternalBrightnessChanged: @escaping (Double) -> Void,
         onExternalBrightnessChanged: @escaping (Double) -> Void,
+        onXDRLevelChanged: @escaping (Double) -> Void,
         onToggleSync: @escaping () -> Void,
         onSelectXDRAutoOffDuration: @escaping (TimeInterval?) -> Void,
+        onPopoverWillShow: @escaping () -> Void,
+        onPopoverDidClose: @escaping () -> Void,
+        onShowAbout: @escaping () -> Void,
         onQuit: @escaping () -> Void
     ) {
         self.onToggleXDR = onToggleXDR
         self.onInternalBrightnessChanged = onInternalBrightnessChanged
         self.onExternalBrightnessChanged = onExternalBrightnessChanged
+        self.onXDRLevelChanged = onXDRLevelChanged
         self.onToggleSync = onToggleSync
         self.onSelectXDRAutoOffDuration = onSelectXDRAutoOffDuration
+        self.onPopoverWillShow = onPopoverWillShow
+        self.onPopoverDidClose = onPopoverDidClose
+        self.onShowAbout = onShowAbout
         self.onQuit = onQuit
         super.init()
     }
@@ -55,12 +68,21 @@ final class MenuBarController: NSObject {
 
         popover.behavior = .transient
         popover.animates = true
+        popover.delegate = self
         // Borderless menubar popover (no arrow); matches system extras.
         popover.setValue(true, forKey: "shouldHideAnchor")
         let view = makePopoverView(state: currentState)
         let hostingController = NSHostingController(rootView: view)
         self.hostingController = hostingController
         popover.contentViewController = hostingController
+    }
+
+    func popoverWillShow(_ notification: Notification) {
+        onPopoverWillShow()
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        onPopoverDidClose()
     }
 
     func render(_ state: MenuContentState) {
@@ -83,8 +105,10 @@ final class MenuBarController: NSObject {
             onToggleXDR: onToggleXDR,
             onInternalBrightnessChanged: onInternalBrightnessChanged,
             onExternalBrightnessChanged: onExternalBrightnessChanged,
+            onXDRLevelChanged: onXDRLevelChanged,
             onToggleSync: onToggleSync,
             onSelectXDRAutoOffDuration: onSelectXDRAutoOffDuration,
+            onShowAbout: onShowAbout,
             onQuit: onQuit
         )
     }
