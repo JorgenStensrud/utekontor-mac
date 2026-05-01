@@ -1,8 +1,8 @@
 # Homebrew cask for Utekontor. This repo is also a tap: see README.
 # When cutting a new release, update version and sha256 to match the uploaded zip.
 cask "utekontor" do
-  version "0.1.0"
-  sha256 "aa312121e2a66f1d30cc4c06ffada35ea1b72a7da786d799c039aec2dcb249ee"
+  version "0.1.1"
+  sha256 "483d0066ae41172d6bcd177787dbf16188011cf5a837e7acc7a6c158d88a416a"
 
   url "https://github.com/JorgenStensrud/utekontor-mac/releases/download/v#{version}/Utekontor-#{version}.zip"
   name "Utekontor"

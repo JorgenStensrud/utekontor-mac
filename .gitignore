@@ -15,3 +15,7 @@ dist/
 
 # macOS
 .DS_Store
+
+# Agent / planning scratch space (local-only)
+docs/superpowers/
+.claude/
