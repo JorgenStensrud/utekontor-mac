@@ -5,11 +5,17 @@ struct MenuPopoverView: View {
     let onToggleXDR: () -> Void
     let onInternalBrightnessChanged: (Double) -> Void
     let onExternalBrightnessChanged: (Double) -> Void
+    let onXDRLevelChanged: (Double) -> Void
     let onToggleSync: () -> Void
     let onSelectXDRAutoOffDuration: (TimeInterval?) -> Void
+    let onShowAbout: () -> Void
     let onQuit: () -> Void
 
     private let timerChoices: [TimeInterval?] = [nil, 600, 1800, 3600, 7200]
+    private let toggleColumnWidth: CGFloat = 56
+    /// Slider positions above this threshold push the panel past the calibrated comfort range
+    /// (heat, color shift, banding). Render as a warning so the user knows.
+    private let xdrWarningThreshold: Double = 0.8
 
     var body: some View {
         content
@@ -55,7 +61,15 @@ struct MenuPopoverView: View {
                     isOn: xdrToggleBinding
                 )
                 .tint(.orange)
+            }
+            .padding(.top, 6)
 
+            if state.xdrEnabled {
+                xdrLevelRow
+                    .padding(.top, 12)
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
                 Divider()
                     .padding(.vertical, 10)
 
@@ -67,7 +81,6 @@ struct MenuPopoverView: View {
                 )
                 .tint(.primary)
             }
-            .padding(.top, 6)
 
             Divider()
                 .padding(.vertical, 14)
@@ -180,29 +193,93 @@ struct MenuPopoverView: View {
         systemImage: String,
         isOn: Binding<Bool>
     ) -> some View {
-        Toggle(isOn: isOn) {
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: systemImage)
+        // Custom layout instead of Toggle's default to keep all switches in a vertical column
+        // regardless of label width.
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.body.weight(.medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 22, alignment: .center)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                Text(subtitle)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .frame(width: toggleColumnWidth, alignment: .trailing)
+        }
+    }
+
+    private var xdrLevelRow: some View {
+        // Smooth color/opacity ramp: slider tint drifts amber → blood-orange across the whole
+        // range (back-loaded curve), percent text drifts from gray → orange between 50–100%, and
+        // the tip fades in between 60–90%. Avoids a hard cliff at exactly 80%.
+        let level = state.xdrLevel
+        let percentRamp = clamp01((level - 0.5) / 0.5)
+        let tipRamp = clamp01((level - 0.6) / 0.3)
+        let neutralGray = Color(.sRGB, red: 0.55, green: 0.55, blue: 0.55, opacity: 1)
+        let percentColor = neutralGray.interpolated(to: .orange, fraction: percentRamp)
+        let softAmber = Color(.sRGB, red: 1.0, green: 0.82, blue: 0.42, opacity: 1)
+        let bloodOrange = Color(.sRGB, red: 0.85, green: 0.30, blue: 0.12, opacity: 1)
+        let tintRamp = pow(level, 1.8)
+        let trackTint = softAmber.interpolated(to: bloodOrange, fraction: tintRamp)
+        return VStack(alignment: .leading, spacing: 8) {
+            // Same two-line layout as the brightness rows so SwiftUI renders the slider thumb at
+            // its full intrinsic size on its own row instead of squashing it next to inline labels.
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "rays")
                     .font(.body.weight(.medium))
                     .foregroundStyle(.secondary)
                     .frame(width: 22, alignment: .center)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.subheadline.weight(.medium))
-                    Text(subtitle)
+                Text("Boost")
+                    .font(.subheadline.weight(.medium))
+                Spacer(minLength: 8)
+                Text("\(Int(level * 100))%")
+                    .font(.subheadline.monospacedDigit().weight(percentRamp > 0.4 ? .medium : .regular))
+                    .foregroundStyle(percentColor)
+            }
+            Slider(
+                value: Binding(
+                    get: { state.xdrLevel },
+                    set: { onXDRLevelChanged($0) }
+                ),
+                in: 0 ... 1
+            )
+            .tint(trackTint)
+            .controlSize(.small)
+            if tipRamp > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "info.circle.fill")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    Text("Tip: high boost uses more battery and runs warmer")
+                        .font(.caption2)
                 }
+                .foregroundStyle(Color.orange.opacity(tipRamp))
             }
         }
-        .toggleStyle(.switch)
+    }
+
+    private func clamp01(_ value: Double) -> Double {
+        max(0, min(1, value))
     }
 
     private var footer: some View {
         HStack(alignment: .center) {
-            Text("Utekontor")
-                .font(.caption2)
+            Button(action: onShowAbout) {
+                HStack(spacing: 4) {
+                    Image(systemName: "info.circle")
+                        .font(.caption2)
+                    Text("About")
+                        .font(.caption2)
+                }
                 .foregroundStyle(.tertiary)
+            }
+            .buttonStyle(.plain)
             Spacer()
             Button("Quit", action: onQuit)
                 .font(.caption.weight(.medium))
@@ -264,5 +341,21 @@ struct MenuPopoverView: View {
         default:
             return "\(minutes) minutes"
         }
+    }
+}
+
+private extension Color {
+    /// Linearly interpolates this color toward another in the device RGB space, e.g. for a smooth
+    /// "intensity" ramp. Falls back to `self` if a system-defined color can't be resolved (rare).
+    func interpolated(to other: Color, fraction: Double) -> Color {
+        let t = max(0, min(1, fraction))
+        let from = NSColor(self).usingColorSpace(.deviceRGB)
+        let to = NSColor(other).usingColorSpace(.deviceRGB)
+        guard let from, let to else { return self }
+        let r = from.redComponent + (to.redComponent - from.redComponent) * t
+        let g = from.greenComponent + (to.greenComponent - from.greenComponent) * t
+        let b = from.blueComponent + (to.blueComponent - from.blueComponent) * t
+        let a = from.alphaComponent + (to.alphaComponent - from.alphaComponent) * t
+        return Color(.sRGB, red: r, green: g, blue: b, opacity: a)
     }
 }

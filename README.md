@@ -8,7 +8,9 @@
 
 Liten, **native macOS menylinje-app** for lysstyrke, XDR-boost og én ekstern skjerm via DDC. **Gratis** og **åpen kildekode** (MIT). Se [Anerkjennelser](#anerkjennelser) for inspirasjon (kun kreditering — ingen tredjepartskode er bundlet).
 
-> ⚠️ **Ansvarsfraskrivelse:** Hele appen er **bygget med AI**. Den er levert «as is», uten garantier av noe slag. Bruk på **eget ansvar** — XDR-boost gir varme og kan påvirke skjermens levetid, og DDC-kommandoer kan oppføre seg uforutsigbart med visse kabler, docker og skjermer. Hvis du ikke er komfortabel med det: ikke installer.
+> ℹ️ **Trygt for skjermen:** macOS har full kontroll over skjerm-maskinvaren og throttler ved varme — du kan ikke skade panelet ved å bruke Utekontor. Vi bruker HDR-API-ene som allerede er innebygd i din Mac.
+>
+> ⚠️ **Ansvarsfraskrivelse:** Hele appen er **bygget med AI**. Den er levert «as is», uten garantier av noe slag. Bruk på **eget ansvar**. Høy XDR-boost gir mer varme og kortere batteritid (begge reversible når du slår av). DDC-kommandoer kan oppføre seg uforutsigbart med visse kabler, docker og skjermer.
 
 ---
 
@@ -69,13 +71,16 @@ brew untap JorgenStensrud/utekontor-mac   # valgfritt
 
 **Hva den gjør i dag:**
 
-- Slå **XDR-boost** av/på på støttede innebygde skjermer (best-effort).
+- Slå **XDR-boost** av/på på støttede innebygde skjermer.
+- **Boost-slider (0–100%)** med jevn farge-overgang — myk amber ved lav boost, varmere mot maks (2.0× eller panelets EDR-ceiling, det laveste vinner). En subtil tip-tekst fader inn over ~70% og minner om varme/batteri.
 - Justere **innebygd Mac-lysstyrke**.
 - Lysstyrke for **én ekstern skjerm** via **DDC** (Apple Silicon, første tilkoblede eksterne skjerm).
-- **Synk** av innebygd lysstyrke mot den eksterne (enveis).
+- **Match brightness** — toveis sync. Drar du intern eller ekstern slider mens sync er på, følger den andre med umiddelbart. F1/F2-tastene synkroniseres også.
+- **Live oppdatering** — slideren reflekterer endringer fra F1/F2-tastene mens menyen er åpen.
 - Valgfri **XDR auto-av**-timer.
+- **Om Utekontor**-knapp — kort om sikkerhet, hva du vil merke ved høy boost, og MIT-lisens.
 
-**Begrensninger:** Apple Silicon-først, kun én ekstern skjerm, og DDC varierer med kabel, dock og skjerm. Se [Tekniske notater](#tekniske-notater).
+**Begrensninger:** Apple Silicon-først, kun én ekstern skjerm, og DDC varierer med kabel, dock og skjerm. Mange skjermer har en hardware-minimum brightness — kan ikke dimmes under den via DDC. Se [Tekniske notater](#tekniske-notater).
 
 ---
 
@@ -178,8 +183,10 @@ Utekontor er uavhengig programvare. Følgende **open source**-prosjekter for mac
 
 ## Tekniske notater
 
-- **XDR-stien** er bevisst minimal. Bruker EDR-headroom-API-er på støttede innebygde skjermer; oppførsel kan endres mellom macOS-versjoner.
-- **DDC-stien** antar Apple Silicon og bruker den første eksterne `DCPAVServiceProxy`-en den klarer å åpne. Resultater varierer med USB-C/HDMI-kabler, docker og skjermfirmware.
+- **XDR-stien** bruker en gammatabell-skalering på toppen av et lite EDR-overlay. Boost-faktoren maps fra slider 0–1 til opp til ca. 2.0× (kappet av panelets faktiske EDR-headroom). HDR-readiness pollses etter aktivering så gamma først applies når overlay-et faktisk har engasjert.
+- **DDC-stien** antar Apple Silicon og bruker den første eksterne `DCPAVServiceProxy`-en den klarer å åpne. De private `IOAVServiceCreateWithService`/`IOAVServiceWriteI2C`-symbolene må lastes via eksplisitt `dlopen` av `IOKit.framework` — gjøres man ikke det, returnerer `dlsym(NULL, ...)` `nil` og DDC-stien feiler stille. Resultater varierer med USB-C/HDMI-kabler, docker og skjermfirmware. Mange skjermer har en hardware-minimum brightness som DDC ikke kan gå under.
+- **Brightness-polling:** Slideren oppdaterer seg via en 0.25s-timer som kun kjører mens menypopoveren er åpen — fanger F1/F2-justeringer og System Settings-endringer, uten å pulle ressurser når menyen er lukket.
+- **Match brightness (sync):** Toveis. Når sync er på og man drar én slider, settes også den andre umiddelbart. F1/F2-tastene oppdager fortsatt via en bakgrunnstimer på 0.4s.
 - **Menylinje-livssyklus:** Foretrekk å åpne `xcodebuild`-bygget `.app` (`./Utekontor.app` etter `./Scripts/package_app.sh`) i stedet for SwiftPM-binaryen direkte — det gir et stabilt menylinje-økosystem (Info.plist, `LSUIElement`, ressurser).
 - **Signering / notarisering:** Distribusjons-builds signeres med Apple Developer ID og notariseres hos Apple. Lokale dev-builds via `Scripts/package_app.sh` er usignerte og kjører kun på din egen maskin.
 

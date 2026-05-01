@@ -30,7 +30,23 @@ private struct GammaTable {
 final class XDRController {
     private var overlays: [CGDirectDisplayID: EDROverlayWindowController] = [:]
     private var baselines: [CGDirectDisplayID: GammaTable] = [:]
+    private var hdrPollTask: Task<Void, Never>?
+    private var hdrReadyDisplayIDs: Set<CGDirectDisplayID> = []
     private(set) var isEnabled = false
+
+    /// 0…1; 0 = no boost above baseline (1.0×), 1 = calibrated max (≈2.0× or the panel's EDR
+    /// ceiling, whichever is lower).
+    var level: Float = 0.7 {
+        didSet {
+            if isEnabled { applyGamma() }
+        }
+    }
+
+    private static let hdrReadyThreshold: Float = 1.05
+    /// Hard ceiling for the gamma boost. The panel's reported EDR headroom further caps this
+    /// when lower. Slider above 80% is rendered as a warning since it pushes the panel past the
+    /// region where banding and white-point shift stay subtle.
+    private static let calibratedMaxBoost: Float = 2.0
 
     func enable(on screens: [NSScreen]) {
         isEnabled = true
@@ -39,6 +55,9 @@ final class XDRController {
 
     func disable() {
         isEnabled = false
+        hdrPollTask?.cancel()
+        hdrPollTask = nil
+        hdrReadyDisplayIDs.removeAll()
         for (displayID, table) in baselines {
             table.apply(displayID: displayID, factor: 1.0)
         }
@@ -61,6 +80,7 @@ final class XDRController {
             overlays[displayID]?.close()
             overlays.removeValue(forKey: displayID)
             baselines.removeValue(forKey: displayID)
+            hdrReadyDisplayIDs.remove(displayID)
         }
 
         for screen in supported {
@@ -74,8 +94,33 @@ final class XDRController {
             overlays[displayID] = overlay
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            self?.applyGamma()
+        startHDRPolling()
+    }
+
+    private func startHDRPolling() {
+        hdrPollTask?.cancel()
+        hdrPollTask = Task { @MainActor [weak self] in
+            // Poll until every supported screen reaches the EDR-ready threshold; gamma is applied
+            // each tick so the user sees the boost ramp in as the overlay engages.
+            for _ in 0..<60 {
+                guard let self, self.isEnabled else { return }
+                var allReady = true
+                for screen in NSScreen.screens {
+                    guard
+                        let displayID = screen.displayID,
+                        self.baselines[displayID] != nil
+                    else { continue }
+                    let edr = Float(screen.maximumExtendedDynamicRangeColorComponentValue)
+                    if edr >= Self.hdrReadyThreshold {
+                        self.hdrReadyDisplayIDs.insert(displayID)
+                    } else {
+                        allReady = false
+                    }
+                }
+                self.applyGamma()
+                if allReady { return }
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
         }
     }
 
@@ -89,19 +134,18 @@ final class XDRController {
                 continue
             }
 
-            // Use both current and potential EDR ceiling so we do not leave headroom unused when
-            // the system reports a conservative `maximumExtendedDynamicRangeColorComponentValue`.
             let maxEdr = Float(screen.maximumExtendedDynamicRangeColorComponentValue)
             let potentialEdr = Float(screen.maximumPotentialExtendedDynamicRangeColorComponentValue)
-            let dynamicRange = max(1.0, max(maxEdr, potentialEdr))
+            let edrCeiling = max(1.0, max(maxEdr, potentialEdr))
 
-            // Gamma lift above captured baseline. Higher `dynamicRange` → stronger boost, clamped
-            // to avoid extreme banding (tunable; was 1.45 max / 0.35 slope / 1.15 floor).
-            let slope: Float = 0.42
-            let maxBoost: Float = 1.72
-            let floorBoost: Float = 1.22
-            let raw = 1.0 + (dynamicRange - 1.0) * slope
-            let factor = dynamicRange > 1.02 ? min(maxBoost, raw) : floorBoost
+            // Until HDR has actually engaged on this display, applying a heavy boost would just
+            // wash out the panel's normal SDR range. Hold at 1.0× until the EDR overlay reports
+            // headroom; the polling loop will re-call us as soon as it does.
+            let isReady = hdrReadyDisplayIDs.contains(displayID)
+            let cap = min(Self.calibratedMaxBoost, max(1.0, edrCeiling))
+            let factor = isReady
+                ? 1.0 + max(0, min(1, level)) * (cap - 1.0)
+                : 1.0
             table.apply(displayID: displayID, factor: factor)
         }
     }
