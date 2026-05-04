@@ -14,7 +14,7 @@ Gratis og åpen kildekode (MIT). Skrevet i Swift, native macOS, ingen tredjepart
 
 **2. Lysstyrke på ekstern skjerm via DDC.** Styr én ekstern skjerm rett fra menylinjen, **med eller uten synk** mot Macens innebygde lysstyrke. Krever bare at du har en ekstern skjerm tilkoblet — om du sitter i sola, i kjelleren eller foran et vindu er saken uvedkommende.
 
-> ℹ️ **Trygt for skjermen.** macOS har full kontroll over skjermmaskinvaren og struper ned ved varme — du kan ikke skade panelet. Utekontor bruker HDR-API-ene som allerede ligger i din Mac.
+> ℹ️ **Trygt for skjermen.** macOS har full kontroll over skjermmaskinvaren og struper ned ved varme — Utekontor bruker HDR-API-ene som allerede ligger i din Mac. Men kan være en grunn for at Apple ikke har på så høy skjermstyre 24/7, bruk auto-off timer funksjonalitet i appen.
 >
 > ⚠️ **Ansvarsfraskrivelse.** Appen er bygget med AI og leveres «as is», uten garantier. Bruk på eget ansvar. Høy XDR-boost gir mer varme og kortere batteritid (begge går tilbake når du slår av). DDC kan være lunefull med visse kabler, dokker og skjermer.
 
