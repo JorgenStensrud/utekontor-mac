@@ -4,49 +4,32 @@
   <img src="Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-256.png" width="128" height="128" alt="Utekontor app-ikon">
 </p>
 
-> Sola skinner, du sitter ute, og MacBook-skjermen ser ut som en blank tallerken. **Utekontor** er en bitteliten menylinje-app som gir deg full XDR-boost, lysstyrke og DDC-kontroll over én ekstern skjerm — uten å åpne System Settings.
+> Sola skinner, du sitter ute, og MacBook-skjermen ser ut som en blank tallerken. **Utekontor** er en liten menylinje-app som gir deg XDR-boost på Macen og lysstyrke på én ekstern skjerm — uten å åpne Systeminnstillinger.
 
-Liten, **native macOS menylinje-app** for lysstyrke, XDR-boost og én ekstern skjerm via DDC. **Gratis** og **åpen kildekode** (MIT). Se [Anerkjennelser](#anerkjennelser) for inspirasjon (kun kreditering — ingen tredjepartskode er bundlet).
+Gratis og åpen kildekode (MIT). Skrevet i Swift, native macOS, ingen tredjepartskode pakket inn.
 
-Utekontor håndterer **to ting**:
+## Hva den gjør
 
-**1. Innebygd XDR-skjerm (det «utekontor»-grepet)** — På støttede MacBook Pro med Liquid Retina XDR kan du slå på **XDR-boost** og heve makslysstyrken over det Apple vanligvis tillater, slik at skjermen fortsatt er lesbar i sterkt omgivende lys (vindu, solskjær, uteplass). Valgfritt **auto-av** lar panelet ikke ligge i boost lenger enn du ønsker.
+**1. XDR-boost på innebygd skjerm.** På støttede MacBook Pro med Liquid Retina XDR kan Utekontor heve makslysstyrken over det Apple normalt tillater, slik at skjermen er lesbar i sterkt lys. En valgfri **auto-av-timer** sørger for at panelet ikke blir liggende i boost lenger enn nødvendig.
 
-**2. Ekstern skjerm** — Juster **lysstyrken på én ekstern skjerm** over DDC rett fra menylinjen — **med eller uten synk** mot Mac-ens innebygde lysstyrke. Den delen krever bare at du bruker en ekstern skjerm\*\*\*: så bryr den seg ikke om du sitter i sola, i kjellerkontor eller i et vindu som ligner et fotolys. (\*\*\*Småtrykk: DDC, kabel, hub — se [Kompatibilitet](#kompatibilitet).)
+**2. Lysstyrke på ekstern skjerm via DDC.** Styr én ekstern skjerm rett fra menylinjen, **med eller uten synk** mot Macens innebygde lysstyrke. Krever bare at du har en ekstern skjerm tilkoblet — om du sitter i sola, i kjelleren eller foran et vindu er saken uvedkommende.
 
-> ℹ️ **Trygt for skjermen:** macOS har full kontroll over skjerm-maskinvaren og throttler ved varme — du kan ikke skade panelet ved å bruke Utekontor. Vi bruker HDR-API-ene som allerede er innebygd i din Mac.
+> ℹ️ **Trygt for skjermen.** macOS har full kontroll over skjermmaskinvaren og struper ned ved varme — du kan ikke skade panelet. Utekontor bruker HDR-API-ene som allerede ligger i din Mac.
 >
-> ⚠️ **Ansvarsfraskrivelse:** Hele appen er **bygget med AI**. Den er levert «as is», uten garantier av noe slag. Bruk på **eget ansvar**. Høy XDR-boost gir mer varme og kortere batteritid (begge reversible når du slår av). DDC-kommandoer kan oppføre seg uforutsigbart med visse kabler, docker og skjermer.
+> ⚠️ **Ansvarsfraskrivelse.** Appen er bygget med AI og leveres «as is», uten garantier. Bruk på eget ansvar. Høy XDR-boost gir mer varme og kortere batteritid (begge går tilbake når du slår av). DDC kan være lunefull med visse kabler, dokker og skjermer.
 
----
+## Krav
 
-## Innhold
-
-- [Kompatibilitet](#kompatibilitet)
-- [Installasjon (Homebrew)](#installasjon-homebrew)
-- [Slik bruker du Utekontor](#slik-bruker-du-utekontor)
-- [Bygg fra kildekode](#bygg-fra-kildekode)
-- [Vedlikehold: releases og Homebrew-sjekksum](#vedlikehold-releases-og-homebrew-sjekksum)
-- [Anerkjennelser](#anerkjennelser)
-- [Tekniske notater](#tekniske-notater)
-- [Lisens](#lisens)
-
----
-
-## Kompatibilitet
-
-- **macOS 13 Ventura eller nyere** (påkrevd).
-- **Kun Apple Silicon** for DDC-stien til ekstern lysstyrke (M1 / M2 / M3 / M4-serien). Intel-Macer støttes ikke for den stien; resten av brukergrensesnittet kan kjøre, men er ikke testet.
-- **XDR-boost** krever en Liquid Retina XDR-skjerm — MacBook Pro 14" / 16" (2021 og senere, M1 Pro / Max og etterfølgere). Andre innebygde skjermer (MacBook Air, 13" MacBook Pro, iMac, Mac mini med ikke-XDR ekstern skjerm) vil ikke booste.
-- **Ekstern DDC** virker med én DDC/CI-kompatibel skjerm om gangen (den første `DCPAVServiceProxy` Utekontor får åpnet). Oppførsel varierer med kabel, hub og dokk; enkelte oppsett vil rett og slett ikke svare.
-
----
+- macOS **13 Ventura** eller nyere
+- **Apple Silicon** for DDC til ekstern skjerm (Intel kjører UI-et, men er ikke testet)
+- **XDR-boost** krever Liquid Retina XDR — MacBook Pro 14"/16" (2021 eller nyere). Andre innebygde paneler får ingen boost.
+- **Ekstern DDC** virker med én DDC/CI-kompatibel skjerm om gangen. Resultatet varierer med kabel, hub og dokk.
 
 ## Installasjon (Homebrew)
 
-Bruker du [Homebrew](https://brew.sh) trenger du **ikke** å bygge noe selv eller flytte appen til `Applications` manuelt. Cask-en installerer **`Utekontor.app` i `/Applications`** for deg (Homebrews standard-plassering).
+Bruker du [Homebrew](https://brew.sh) trenger du ikke å bygge eller flytte appen selv — cask-en legger **`Utekontor.app`** i `/Applications`.
 
-*Har du ikke Homebrew?* Følg [installasjonen på brew.sh](https://brew.sh) (offisiell side med én kopierbar Terminal-kommando), start Terminal på nytt om nødvendig, og kom tilbake til kommandoene under.
+*Har du ikke Homebrew?* Følg den ene Terminal-kommandoen på [brew.sh](https://brew.sh), så er du i gang.
 
 ```bash
 brew tap JorgenStensrud/utekontor-mac https://github.com/JorgenStensrud/utekontor-mac
@@ -59,166 +42,74 @@ Kun for din bruker (valgfritt):
 brew install --cask --appdir="$HOME/Applications" utekontor
 ```
 
-### Oppdatering
+**Oppdatering:** `brew update && brew upgrade --cask utekontor`
+**Avinstallering:** `brew uninstall --cask utekontor` (og evt. `brew untap JorgenStensrud/utekontor-mac`)
 
-```bash
-brew update
-brew upgrade --cask utekontor
-```
-
-### Avinstallasjon
-
-```bash
-brew uninstall --cask utekontor
-brew untap JorgenStensrud/utekontor-mac   # valgfritt
-```
-
-### Første oppstart
-
-Åpne **Utekontor** fra **Applications** eller Spotlight. Distribusjons-builds er **signert med Apple Developer ID** og **notarisert hos Apple**, så Gatekeeper godtar appen uten advarsler ved første kjøring. Bygger du **selv** med `./Scripts/package_app.sh` uten eget utviklersertifikat, kan macOS fortsatt advare — bruk i så fall **System Settings → Privacy & Security → Open Anyway** om du stoler på bygget.
-
-**Krav:** macOS **13 (Ventura)** eller nyere. Apple Silicon anbefales (DDC-stien er først og fremst testet på Apple Silicon).
-
----
+Distribusjonsbygget er **signert med Apple Developer ID og notarisert**, så Gatekeeper godtar appen uten advarsler første gang du åpner den.
 
 ## Slik bruker du Utekontor
 
-1. Start **Utekontor** — den kjører i **menylinjen** (ingen Dock-ikon, by design).
-2. Klikk **sol-/statusikonet** for å åpne menyen og slidere.
-3. Valgfritt: **System Settings → General → Login Items** — legg til Utekontor for å få den ved innlogging.
+1. Start **Utekontor** — den lever i menylinjen (ingen Dock-ikon, med vilje).
+2. Klikk sol-/statusikonet for å åpne menyen og glidebryterne.
+3. Vil du ha den ved pålogging: **Systeminnstillinger → Generelt → Påloggingsobjekter**.
 
-**Hva den gjør i dag:**
+I menyen finner du:
 
-- Slå **XDR-boost** av/på på støttede innebygde skjermer.
-- **Boost-slider (0–100%)** med jevn farge-overgang — myk amber ved lav boost, varmere mot maks (2.0× eller panelets EDR-ceiling, det laveste vinner). En subtil tip-tekst fader inn over ~70% og minner om varme/batteri.
-- Justere **innebygd Mac-lysstyrke**.
-- Lysstyrke for **én ekstern skjerm** via **DDC** (Apple Silicon, første tilkoblede eksterne skjerm).
-- **Match brightness** — toveis sync. Drar du intern eller ekstern slider mens sync er på, følger den andre med umiddelbart. F1/F2-tastene synkroniseres også.
-- **Live oppdatering** — slideren reflekterer endringer fra F1/F2-tastene mens menyen er åpen.
-- Valgfri **XDR auto-av**-timer.
-- **Om Utekontor**-knapp — kort om sikkerhet, hva du vil merke ved høy boost, og MIT-lisens.
+- **XDR-boost** av/på, med en glidebryter for hvor hardt du vil pushe panelet (mykt amber lavt, varmere mot maks). Valgfri auto-av-timer.
+- **Lysstyrke** for innebygd skjerm og én ekstern skjerm (DDC).
+- **Synk** — toveis. Drar du én glidebryter mens synk er på, følger den andre med. F1/F2 oppdaterer også begge.
+- **Live oppdatering** mens menyen er åpen — F1/F2 og endringer fra Systeminnstillinger speiles i glidebryterne.
+- **Om Utekontor** — kort om sikkerhet, hva du merker ved høy boost og MIT-lisensen.
 
-**Begrensninger:** Apple Silicon-først, kun én ekstern skjerm, og DDC varierer med kabel, dock og skjerm. Mange skjermer har en hardware-minimum brightness — kan ikke dimmes under den via DDC. Se [Tekniske notater](#tekniske-notater).
-
----
+**Begrensninger:** Apple Silicon-først, kun én ekstern skjerm, og mange skjermer har en minimumsverdi i fastvaren som DDC ikke kommer under.
 
 ## Bygg fra kildekode
 
-For deg som vil **hacke på koden** eller bygge uten Homebrew. Du trenger:
+Trenger du å hacke på koden eller bygge uten Homebrew:
 
-- **Xcode 15+** (eller minst Xcode Command Line Tools med Swift-toolchain som matcher prosjektet)
-- **macOS 13+** (deployment target)
-- **Swift 6.0** toolchain
+- **Xcode 15+** (eller Command Line Tools med en Swift 6.0-toolchain)
+- **macOS 13+** som deployment target
 
-> 💡 **Swift vs. Xcode:** Selve koden er Swift. **Xcode** brukes som byggesystem (`xcodebuild`) for å produsere et signert `.app`-bundle med Info.plist, ikoner og menylinje-oppsett. Repoet har også en `Package.swift` for rask SwiftPM-kompilering, men den genererer **ikke** et kjørbart menylinje-`.app`.
-
-### Klone
+Selve koden er Swift. **`xcodebuild`** brukes for å produsere et `.app`-bundle med Info.plist, ikoner og menylinje-oppsett. `Package.swift` finnes for rask SwiftPM-kompilering, men den lager ikke et kjørbart menylinje-`.app`.
 
 ```bash
 git clone https://github.com/JorgenStensrud/utekontor-mac.git
 cd utekontor-mac
-```
-
-### Repo-struktur (kort)
-
-```text
-Sources/Utekontor/        Swift-kildekode
-Resources/                Info.plist, Assets.xcassets, ikoner
-Utekontor.xcodeproj/      Xcode-prosjekt (anbefalt byggesti)
-Package.swift             SwiftPM (kun rask kompileringssjekk)
-Scripts/
-  package_app.sh          xcodebuild → .derived/.../Utekontor.app
-  install_to_applications.sh
-  release_zip.sh          Lager dist/Utekontor-<version>.zip + sha256
-Casks/utekontor.rb        Homebrew cask-definisjon (denne repo er en tap)
-```
-
-### Rask kompileringssjekk (SwiftPM)
-
-Genererer **ikke** den anbefalte menylinje-`.app`-en, men er nyttig for CI eller editor-tooling:
-
-```bash
-mkdir -p /tmp/clangcache
-CLANG_MODULE_CACHE_PATH=/tmp/clangcache swift build
-```
-
-### Bygg ekte `.app` (det du faktisk skal kjøre lokalt)
-
-Bruker **`xcodebuild`** under panseret, skriver til `.derived/`, og lager en symlink `Utekontor.app` i repo-roten:
-
-```bash
 ./Scripts/package_app.sh
 open Utekontor.app
 ```
 
-Debug-utgangssti:
-
-```text
-./.derived/Build/Products/Debug/Utekontor.app
-```
-
-Release-build som åpnes automatisk etter vellykket bygg:
+Release-bygg som åpnes etter ferdig kompilering:
 
 ```bash
 UTEKONTOR_CONFIGURATION=Release UTEKONTOR_OPEN_AFTER_BUILD=1 ./Scripts/package_app.sh
 ```
 
-Miljøvariabler `package_app.sh` forstår:
+Vil du legge ditt eget bygg i `/Applications`, kjør `./Scripts/install_to_applications.sh`. Lokale bygg uten eget utviklersertifikat kan utløse en Gatekeeper-advarsel; bruk **Systeminnstillinger → Personvern og sikkerhet → Åpne likevel** om du stoler på bygget.
 
-| Variabel                       | Standard | Beskrivelse                          |
-| ------------------------------ | -------- | ------------------------------------ |
-| `UTEKONTOR_CONFIGURATION`      | `Debug`  | `Debug` eller `Release`              |
-| `UTEKONTOR_OPEN_AFTER_BUILD`   | `0`      | Sett til `1` for å `open` etter bygg |
-
-### Kopiér din dev-build til Applications (valgfritt)
-
-Kun hvis **du** vil ha **din egenbygde** app i `/Applications` mens du utvikler — ikke nødvendig for Homebrew-brukere.
-
-```bash
-./Scripts/package_app.sh
-./Scripts/install_to_applications.sh
-```
-
-Overstyr mappe eller konfigurasjon:
-
-```bash
-UTEKONTOR_INSTALL_DIR="$HOME/Applications" \
-UTEKONTOR_CONFIGURATION=Release \
-  ./Scripts/install_to_applications.sh
-```
-
----
-
-## Vedlikehold: releases og Homebrew-sjekksum
+### Slipp en ny versjon (vedlikeholdere)
 
 ```bash
 ./Scripts/release_zip.sh
 ```
 
-Legg ved `dist/Utekontor-<version>.zip` på en [GitHub-utgivelse](https://github.com/JorgenStensrud/utekontor-mac/releases) der taggen er `v` pluss cask-versjonen (f.eks. `v0.1.2`). Oppdater `version` og `sha256` i `Casks/utekontor.rb` slik at de matcher den opplastede zip-en (`shasum -a 256` på den filen).
-
----
-
-## Anerkjennelser
-
-Utekontor er uavhengig programvare. Følgende **open source**-prosjekter for macOS-skjermkontroll er kreditert for idéer og prior art (ingen kode er kopiert, ingen endorsement):
-
-- **[BrightIntosh](https://github.com/niklasr22/BrightIntosh)** — XDR / EDR-style brightness boost ([BrightIntosh app sources](https://github.com/niklasr22/BrightIntosh/tree/main/BrightIntosh))
-- **[Lunar](https://github.com/alin23/Lunar)** — brightness, monitors og DDC-økosystem
-- **[MonitorControl](https://github.com/MonitorControl/MonitorControl)** — ekstern lysstyrke over DDC
-
----
+Last opp `dist/Utekontor-<version>.zip` til en [GitHub-release](https://github.com/JorgenStensrud/utekontor-mac/releases) med tag `v<version>`. Oppdater `version` og `sha256` i `Casks/utekontor.rb` slik at de matcher zip-en (`shasum -a 256`).
 
 ## Tekniske notater
 
-- **XDR-stien** bruker en gammatabell-skalering på toppen av et lite EDR-overlay. Boost-faktoren maps fra slider 0–1 til opp til ca. 2.0× (kappet av panelets faktiske EDR-headroom). HDR-readiness pollses etter aktivering så gamma først applies når overlay-et faktisk har engasjert.
-- **DDC-stien** antar Apple Silicon og bruker den første eksterne `DCPAVServiceProxy`-en den klarer å åpne. De private `IOAVServiceCreateWithService`/`IOAVServiceWriteI2C`-symbolene må lastes via eksplisitt `dlopen` av `IOKit.framework` — gjøres man ikke det, returnerer `dlsym(NULL, ...)` `nil` og DDC-stien feiler stille. Resultater varierer med USB-C/HDMI-kabler, docker og skjermfirmware. Mange skjermer har en hardware-minimum brightness som DDC ikke kan gå under.
-- **Brightness-polling:** Slideren oppdaterer seg via en 0.25s-timer som kun kjører mens menypopoveren er åpen — fanger F1/F2-justeringer og System Settings-endringer, uten å pulle ressurser når menyen er lukket.
-- **Match brightness (sync):** Toveis. Når sync er på og man drar én slider, settes også den andre umiddelbart. F1/F2-tastene oppdager fortsatt via en bakgrunnstimer på 0.4s.
-- **Menylinje-livssyklus:** Foretrekk å åpne `xcodebuild`-bygget `.app` (`./Utekontor.app` etter `./Scripts/package_app.sh`) i stedet for SwiftPM-binaryen direkte — det gir et stabilt menylinje-økosystem (Info.plist, `LSUIElement`, ressurser).
-- **Signering / notarisering:** Distribusjons-builds signeres med Apple Developer ID og notariseres hos Apple. Lokale dev-builds via `Scripts/package_app.sh` er usignerte og kjører kun på din egen maskin.
+- **XDR:** Et lite EDR-overlay kombinert med gamma-skalering. Boostfaktoren går opp til ca. 2.0× — eller panelets faktiske EDR-tak, det laveste vinner. Gamma settes først når HDR-overlayet har engasjert seg.
+- **DDC:** Bruker den første eksterne `DCPAVServiceProxy` som lar seg åpne. De private `IOAVServiceCreateWithService`/`IOAVServiceWriteI2C`-symbolene lastes med eksplisitt `dlopen` av `IOKit.framework`; uten det feiler DDC-stien stille.
+- **Lysstyrke-polling:** Glidebryteren oppdateres via en 0.25 s-timer som kun går mens menyen er åpen — den fanger opp F1/F2 og endringer i Systeminnstillinger uten å bruke ressurser ellers.
+- **Synk:** Toveis i UI; F1/F2 leses via en bakgrunnstimer på 0.4 s.
+- **Menylinje-oppsett:** Foretrekk `xcodebuild`-bygget `.app` framfor SwiftPM-binaryen direkte — Info.plist og `LSUIElement` skal være på plass for at appen skal oppføre seg som en menylinje-app.
 
----
+## Anerkjennelser
+
+Utekontor er uavhengig programvare. Disse åpne prosjektene har inspirert med ideer og tidligere arbeid (ingen kode er kopiert, ingen samarbeid):
+
+- [**BrightIntosh**](https://github.com/niklasr22/BrightIntosh) — XDR/EDR-lysstyrkeboost
+- [**Lunar**](https://github.com/alin23/Lunar) — lysstyrke, skjermer og DDC
+- [**MonitorControl**](https://github.com/MonitorControl/MonitorControl) — ekstern lysstyrke over DDC
 
 ## Lisens
 
