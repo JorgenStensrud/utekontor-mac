@@ -53,7 +53,8 @@ I menyen finner du:
 
 **Begrensninger:** Apple Silicon-først, kun én ekstern skjerm, og mange skjermer har en minimumsverdi i fastvaren som DDC ikke kommer under.
 
-## Bygg fra kildekode
+<details>
+<summary><h2 style="display:inline">Bygg fra kildekode</h2></summary>
 
 Ønsker du å bygge videre på koden eller bygge uten Homebrew:
 
@@ -84,6 +85,8 @@ Vil du legge ditt eget bygg i `/Applications`, kjør `./Scripts/install_to_appli
 ```
 
 Last opp `dist/Utekontor-<version>.zip` til en [GitHub-release](https://github.com/JorgenStensrud/utekontor-mac/releases) med tag `v<version>`. Oppdater `version` og `sha256` i `Casks/utekontor.rb` slik at de matcher zip-en (`shasum -a 256`).
+
+</details>
 
 ## Tekniske notater
 
