@@ -8,6 +8,12 @@
 
 Liten, **native macOS menylinje-app** for lysstyrke, XDR-boost og én ekstern skjerm via DDC. **Gratis** og **åpen kildekode** (MIT). Se [Anerkjennelser](#anerkjennelser) for inspirasjon (kun kreditering — ingen tredjepartskode er bundlet).
 
+Utekontor håndterer **to ting**:
+
+**1. Innebygd XDR-skjerm (det «utekontor»-grepet)** — På støttede MacBook Pro med Liquid Retina XDR kan du slå på **XDR-boost** og heve makslysstyrken over det Apple vanligvis tillater, slik at skjermen fortsatt er lesbar i sterkt omgivende lys (vindu, solskjær, uteplass). Valgfritt **auto-av** lar panelet ikke ligge i boost lenger enn du ønsker.
+
+**2. Ekstern skjerm** — Juster **lysstyrken på én ekstern skjerm** over DDC rett fra menylinjen — **med eller uten synk** mot Mac-ens innebygde lysstyrke. Den delen krever bare at du bruker en ekstern skjerm\*\*\*: så bryr den seg ikke om du sitter i sola, i kjellerkontor eller i et vindu som ligner et fotolys. (\*\*\*Småtrykk: DDC, kabel, hub — se [Kompatibilitet](#kompatibilitet).)
+
 > ℹ️ **Trygt for skjermen:** macOS har full kontroll over skjerm-maskinvaren og throttler ved varme — du kan ikke skade panelet ved å bruke Utekontor. Vi bruker HDR-API-ene som allerede er innebygd i din Mac.
 >
 > ⚠️ **Ansvarsfraskrivelse:** Hele appen er **bygget med AI**. Den er levert «as is», uten garantier av noe slag. Bruk på **eget ansvar**. Høy XDR-boost gir mer varme og kortere batteritid (begge reversible når du slår av). DDC-kommandoer kan oppføre seg uforutsigbart med visse kabler, docker og skjermer.
@@ -16,6 +22,7 @@ Liten, **native macOS menylinje-app** for lysstyrke, XDR-boost og én ekstern sk
 
 ## Innhold
 
+- [Kompatibilitet](#kompatibilitet)
 - [Installasjon (Homebrew)](#installasjon-homebrew)
 - [Slik bruker du Utekontor](#slik-bruker-du-utekontor)
 - [Bygg fra kildekode](#bygg-fra-kildekode)
@@ -26,9 +33,20 @@ Liten, **native macOS menylinje-app** for lysstyrke, XDR-boost og én ekstern sk
 
 ---
 
+## Kompatibilitet
+
+- **macOS 13 Ventura eller nyere** (påkrevd).
+- **Kun Apple Silicon** for DDC-stien til ekstern lysstyrke (M1 / M2 / M3 / M4-serien). Intel-Macer støttes ikke for den stien; resten av brukergrensesnittet kan kjøre, men er ikke testet.
+- **XDR-boost** krever en Liquid Retina XDR-skjerm — MacBook Pro 14" / 16" (2021 og senere, M1 Pro / Max og etterfølgere). Andre innebygde skjermer (MacBook Air, 13" MacBook Pro, iMac, Mac mini med ikke-XDR ekstern skjerm) vil ikke booste.
+- **Ekstern DDC** virker med én DDC/CI-kompatibel skjerm om gangen (den første `DCPAVServiceProxy` Utekontor får åpnet). Oppførsel varierer med kabel, hub og dokk; enkelte oppsett vil rett og slett ikke svare.
+
+---
+
 ## Installasjon (Homebrew)
 
 Bruker du [Homebrew](https://brew.sh) trenger du **ikke** å bygge noe selv eller flytte appen til `Applications` manuelt. Cask-en installerer **`Utekontor.app` i `/Applications`** for deg (Homebrews standard-plassering).
+
+*Har du ikke Homebrew?* Følg [installasjonen på brew.sh](https://brew.sh) (offisiell side med én kopierbar Terminal-kommando), start Terminal på nytt om nødvendig, og kom tilbake til kommandoene under.
 
 ```bash
 brew tap JorgenStensrud/utekontor-mac https://github.com/JorgenStensrud/utekontor-mac
@@ -57,7 +75,7 @@ brew untap JorgenStensrud/utekontor-mac   # valgfritt
 
 ### Første oppstart
 
-Åpne **Utekontor** fra **Applications** eller Spotlight. Distribusjons-builds er **signert med Apple Developer ID** og **notarisert hos Apple**, så Gatekeeper godtar appen uten advarsler ved første kjøring.
+Åpne **Utekontor** fra **Applications** eller Spotlight. Distribusjons-builds er **signert med Apple Developer ID** og **notarisert hos Apple**, så Gatekeeper godtar appen uten advarsler ved første kjøring. Bygger du **selv** med `./Scripts/package_app.sh` uten eget utviklersertifikat, kan macOS fortsatt advare — bruk i så fall **System Settings → Privacy & Security → Open Anyway** om du stoler på bygget.
 
 **Krav:** macOS **13 (Ventura)** eller nyere. Apple Silicon anbefales (DDC-stien er først og fremst testet på Apple Silicon).
 
@@ -168,6 +186,16 @@ UTEKONTOR_INSTALL_DIR="$HOME/Applications" \
 UTEKONTOR_CONFIGURATION=Release \
   ./Scripts/install_to_applications.sh
 ```
+
+---
+
+## Vedlikehold: releases og Homebrew-sjekksum
+
+```bash
+./Scripts/release_zip.sh
+```
+
+Legg ved `dist/Utekontor-<version>.zip` på en [GitHub-utgivelse](https://github.com/JorgenStensrud/utekontor-mac/releases) der taggen er `v` pluss cask-versjonen (f.eks. `v0.1.2`). Oppdater `version` og `sha256` i `Casks/utekontor.rb` slik at de matcher den opplastede zip-en (`shasum -a 256` på den filen).
 
 ---
 
