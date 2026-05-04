@@ -36,12 +36,6 @@ brew tap JorgenStensrud/utekontor-mac https://github.com/JorgenStensrud/utekonto
 brew install --cask utekontor
 ```
 
-Kun for din bruker (valgfritt):
-
-```bash
-brew install --cask --appdir="$HOME/Applications" utekontor
-```
-
 **Oppdatering:** `brew update && brew upgrade --cask utekontor`
 **Avinstallering:** `brew uninstall --cask utekontor` (og evt. `brew untap JorgenStensrud/utekontor-mac`)
 
