@@ -39,8 +39,6 @@ brew install --cask utekontor
 **Oppdatering:** `brew update && brew upgrade --cask utekontor`
 **Avinstallering:** `brew uninstall --cask utekontor` (og evt. `brew untap JorgenStensrud/utekontor-mac`)
 
-Distribusjonsbygget er **signert med Apple Developer ID og notarisert**, så Gatekeeper godtar appen uten advarsler første gang du åpner den.
-
 ## Slik bruker du Utekontor
 
 1. Start **Utekontor** — den lever i menylinjen (ingen Dock-ikon, med vilje).
@@ -52,14 +50,12 @@ I menyen finner du:
 - **XDR-boost** av/på, med en glidebryter for hvor hardt du vil pushe panelet (mykt amber lavt, varmere mot maks). Valgfri auto-av-timer.
 - **Lysstyrke** for innebygd skjerm og én ekstern skjerm (DDC).
 - **Synk** — toveis. Drar du én glidebryter mens synk er på, følger den andre med. F1/F2 oppdaterer også begge.
-- **Live oppdatering** mens menyen er åpen — F1/F2 og endringer fra Systeminnstillinger speiles i glidebryterne.
-- **Om Utekontor** — kort om sikkerhet, hva du merker ved høy boost og MIT-lisensen.
 
 **Begrensninger:** Apple Silicon-først, kun én ekstern skjerm, og mange skjermer har en minimumsverdi i fastvaren som DDC ikke kommer under.
 
 ## Bygg fra kildekode
 
-Trenger du å hacke på koden eller bygge uten Homebrew:
+Ønsker du å bygge videre på koden eller bygge uten Homebrew:
 
 - **Xcode 15+** (eller Command Line Tools med en Swift 6.0-toolchain)
 - **macOS 13+** som deployment target
