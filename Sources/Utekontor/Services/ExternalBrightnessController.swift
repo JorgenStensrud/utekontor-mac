@@ -1,9 +1,11 @@
+import CoreGraphics
 import Foundation
 
 @MainActor
 final class ExternalBrightnessController {
     private let defaults = UserDefaults.standard
     private let ddc = Arm64DDCService()
+    private var boundDisplayID: CGDirectDisplayID?
 
     private(set) var currentBrightness: Float
     private(set) var isSupported = false
@@ -23,6 +25,13 @@ final class ExternalBrightnessController {
     }
 
     func bind(display: DisplaySnapshot?) {
+        // Display topology changed — a cached DDC handle for the old display
+        // is stale and every write against it fails silently.
+        if display?.id != boundDisplayID {
+            boundDisplayID = display?.id
+            ddc.invalidate()
+        }
+
         guard let display else {
             isSupported = false
             statusText = "No external display"
