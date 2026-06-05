@@ -9,6 +9,7 @@ typealias IOAVService = AnyObject
 enum PrivateDisplayAPIs {
     typealias CreateIOAVServiceFn = @convention(c) (CFAllocator?, io_service_t) -> Unmanaged<AnyObject>?
     typealias WriteI2CFn = @convention(c) (IOAVService, UInt32, UInt32, UnsafeMutableRawPointer?, UInt32) -> IOReturn
+    typealias ReadI2CFn = @convention(c) (IOAVService, UInt32, UInt32, UnsafeMutableRawPointer?, UInt32) -> IOReturn
     typealias GetBrightnessFn = @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int32
     typealias SetBrightnessFn = @convention(c) (CGDirectDisplayID, Float) -> Int32
 
@@ -36,6 +37,11 @@ enum PrivateDisplayAPIs {
 
     static let writeI2C: WriteI2CFn? = load(
         "IOAVServiceWriteI2C",
+        handle: ioKitHandle
+    )
+
+    static let readI2C: ReadI2CFn? = load(
+        "IOAVServiceReadI2C",
         handle: ioKitHandle
     )
 
