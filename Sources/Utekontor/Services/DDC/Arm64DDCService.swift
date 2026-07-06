@@ -7,6 +7,8 @@ import IOKit
 final class Arm64DDCService {
     private static let chipAddress: UInt32 = 0x37
     private static let dataAddress: UInt32 = 0x51
+    /// DDC/CI "Set VCP Feature" opcode.
+    private static let setVCPFeatureOpcode: UInt8 = 0x03
     private static let luminanceVCP: UInt8 = 0x10
     /// DDC/CI needs a pause between the read request and fetching the reply.
     private static let replyDelayMicroseconds: useconds_t = 40_000
@@ -61,8 +63,9 @@ final class Arm64DDCService {
     }
 
     private static func write(service: IOAVService, vcp: UInt8, value: UInt16) -> Bool {
-        let payload: [UInt8] = [vcp, UInt8(value >> 8), UInt8(value & 0xFF)]
-        var packet: [UInt8] = [UInt8(0x80 | (payload.count + 1)), UInt8(payload.count)] + payload + [0]
+        // DDC/CI write: [0x80 | body length, opcode, VCP code, value hi, value lo, checksum].
+        let body: [UInt8] = [setVCPFeatureOpcode, vcp, UInt8(value >> 8), UInt8(value & 0xFF)]
+        var packet: [UInt8] = [0x80 | UInt8(body.count)] + body + [0]
         packet[packet.count - 1] = checksum(seed: chipAddress << 1 ^ dataAddress, data: packet.dropLast())
         let packetCount = UInt32(packet.count)
 

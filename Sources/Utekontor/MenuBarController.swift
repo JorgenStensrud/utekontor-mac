@@ -59,7 +59,7 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
 
     func install() {
         if let button = statusItem.button {
-            button.image = StatusIconRenderer.makeIcon(xdrEnabled: false, syncEnabled: false, externalAvailable: false)
+            button.image = StatusIconRenderer.makeIcon(xdrEnabled: false, externalAvailable: false)
             button.image?.isTemplate = true
             button.action = #selector(togglePopover(_:))
             button.target = self
@@ -93,7 +93,6 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         }
         statusItem.button?.image = StatusIconRenderer.makeIcon(
             xdrEnabled: state.xdrEnabled,
-            syncEnabled: state.syncEnabled,
             externalAvailable: state.externalBrightnessEnabled
         )
         statusItem.button?.image?.isTemplate = true

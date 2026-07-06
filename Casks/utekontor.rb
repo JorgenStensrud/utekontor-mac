@@ -12,4 +12,6 @@ cask "utekontor" do
   depends_on macos: ">= :ventura"
 
   app "Utekontor.app"
+
+  uninstall quit: "app.utekontor.macos"
 end

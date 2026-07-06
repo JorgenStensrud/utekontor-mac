@@ -17,6 +17,7 @@ final class EDROverlayWindowController: NSWindowController {
         window.ignoresMouseEvents = true
         window.level = .screenSaver
         window.collectionBehavior = [.stationary, .canJoinAllSpaces, .ignoresCycle]
+        window.contentView = EDROverlayView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
         super.init(window: window)
         update(screen: screen)
     }
@@ -33,6 +34,5 @@ final class EDROverlayWindowController: NSWindowController {
     func update(screen: NSScreen) {
         let origin = CGPoint(x: screen.frame.minX, y: screen.frame.maxY - 1)
         window?.setFrameOrigin(origin)
-        window?.contentView = EDROverlayView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
     }
 }

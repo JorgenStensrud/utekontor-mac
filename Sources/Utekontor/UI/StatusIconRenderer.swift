@@ -2,8 +2,7 @@ import AppKit
 
 enum StatusIconRenderer {
     /// Sun symbol for the menu bar; filled when XDR is active.
-    static func makeIcon(xdrEnabled: Bool, syncEnabled: Bool, externalAvailable: Bool) -> NSImage {
-        _ = syncEnabled
+    static func makeIcon(xdrEnabled: Bool, externalAvailable: Bool) -> NSImage {
         let name = xdrEnabled ? "sun.max.fill" : "sun.max"
         let weight: NSFont.Weight = externalAvailable ? .medium : .regular
         let config = NSImage.SymbolConfiguration(pointSize: 15, weight: weight)
