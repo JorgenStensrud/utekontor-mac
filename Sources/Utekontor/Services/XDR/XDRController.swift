@@ -18,6 +18,14 @@ private struct GammaTable {
         return GammaTable(red: red, green: green, blue: blue)
     }
 
+    /// A healthy baseline tops out near 1.0. macOS animates sleep/wake fades by scaling the
+    /// gamma tables toward zero, so a low peak means we sampled mid-fade — caching that as the
+    /// baseline would render the panel permanently dark once multiplied.
+    var isPlausibleBaseline: Bool {
+        let peak = max(red.max() ?? 0, green.max() ?? 0, blue.max() ?? 0)
+        return peak >= 0.5
+    }
+
     func apply(displayID: CGDirectDisplayID, factor: Float) {
         var red = self.red.map { $0 * factor }
         var green = self.green.map { $0 * factor }
@@ -86,7 +94,16 @@ final class XDRController {
         for screen in supported {
             guard let displayID = screen.displayID else { continue }
             if baselines[displayID] == nil {
-                baselines[displayID] = GammaTable.capture(displayID: displayID)
+                guard
+                    CGDisplayIsAsleep(displayID) == 0,
+                    let table = GammaTable.capture(displayID: displayID),
+                    table.isPlausibleBaseline
+                else {
+                    // Mid-fade or asleep — don't boost this display yet; the next
+                    // refresh (wake handler, display change) retries the capture.
+                    continue
+                }
+                baselines[displayID] = table
             }
             let overlay = overlays[displayID] ?? EDROverlayWindowController(screen: screen, displayID: displayID)
             overlay.update(screen: screen)
@@ -129,7 +146,8 @@ final class XDRController {
         for screen in NSScreen.screens {
             guard
                 let displayID = screen.displayID,
-                let table = baselines[displayID]
+                let table = baselines[displayID],
+                CGDisplayIsAsleep(displayID) == 0
             else {
                 continue
             }

@@ -27,6 +27,16 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var externalDisplay: DisplaySnapshot?
     private var internalBrightness: Float = 0.5
     private var brightnessPollTimer: Timer?
+    private var pendingWakeRefreshTask: Task<Void, Never>?
+    private var pendingDisplayChangeTask: Task<Void, Never>?
+
+    /// macOS animates the wake fade-in through the display gamma tables. Writing gamma during
+    /// that window can wedge WindowServer's fade state machine — the built-in panel then renders
+    /// black (backlight on) until a display pipeline reinit, surviving even this app's exit.
+    /// Wait for the fade to complete before touching gamma again.
+    private static let wakeRefreshDelay: TimeInterval = 4
+    /// Display reconfiguration fires notification bursts; coalesce before re-applying gamma.
+    private static let displayChangeDebounce: TimeInterval = 1.5
 
     private var xdrEnabled: Bool {
         didSet {
@@ -77,6 +87,9 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // A previous instance that crashed with the boost active can leave its gamma tables
+        // behind; start from the profile's clean state before capturing any baseline.
+        CGDisplayRestoreColorSyncSettings()
         menuBarController.install()
         wireLifecycleObservers()
         refreshDisplayState()
@@ -95,17 +108,55 @@ final class AppController: NSObject, NSApplicationDelegate {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
-        NSWorkspace.shared.notificationCenter.addObserver(
+        let workspaceCenter = NSWorkspace.shared.notificationCenter
+        workspaceCenter.addObserver(
             self,
-            selector: #selector(handleDisplayChange),
+            selector: #selector(handleScreensDidWake),
             name: NSWorkspace.screensDidWakeNotification,
+            object: nil
+        )
+        workspaceCenter.addObserver(
+            self,
+            selector: #selector(handleWillSleep),
+            name: NSWorkspace.willSleepNotification,
+            object: nil
+        )
+        workspaceCenter.addObserver(
+            self,
+            selector: #selector(handleWillSleep),
+            name: NSWorkspace.screensDidSleepNotification,
             object: nil
         )
     }
 
     @objc
     private func handleDisplayChange() {
-        refreshDisplayState()
+        pendingDisplayChangeTask?.cancel()
+        pendingDisplayChangeTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(Self.displayChangeDebounce * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.refreshDisplayState()
+        }
+    }
+
+    /// Tear down the gamma boost and overlays before the displays go dark, so the system's own
+    /// sleep/wake gamma fades never overlap with ours. `xdrEnabled` is left untouched — the wake
+    /// handler brings the boost back once the fade has settled.
+    @objc
+    private func handleWillSleep() {
+        pendingWakeRefreshTask?.cancel()
+        pendingDisplayChangeTask?.cancel()
+        xdrController.disable()
+    }
+
+    @objc
+    private func handleScreensDidWake() {
+        pendingWakeRefreshTask?.cancel()
+        pendingWakeRefreshTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(Self.wakeRefreshDelay * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.refreshDisplayState()
+        }
     }
 
     func refreshDisplayState() {
