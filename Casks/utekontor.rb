@@ -9,7 +9,7 @@ cask "utekontor" do
   desc "Menylinje-lysstyrke, XDR-boost og DDC-kontroll for ekstern skjerm (notarisert utgivelse, hobbyprosjekt)"
   homepage "https://github.com/JorgenStensrud/utekontor-mac"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "Utekontor.app"
 
