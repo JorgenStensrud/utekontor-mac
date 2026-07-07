@@ -27,8 +27,12 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var externalDisplay: DisplaySnapshot?
     private var internalBrightness: Float = 0.5
     private var brightnessPollTimer: Timer?
-    private var pendingWakeRefreshTask: Task<Void, Never>?
-    private var pendingDisplayChangeTask: Task<Void, Never>?
+    private var pendingRefreshTask: Task<Void, Never>?
+    private var pendingRefreshFireAt: Date = .distantPast
+    /// No refresh — and therefore no gamma write — may run before this instant. Set on wake so
+    /// that display-reconfiguration notifications arriving after wake cannot schedule a refresh
+    /// inside the fade window.
+    private var refreshNotBefore: Date = .distantPast
 
     /// macOS animates the wake fade-in through the display gamma tables. Writing gamma during
     /// that window can wedge WindowServer's fade state machine — the built-in panel then renders
@@ -131,12 +135,10 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     @objc
     private func handleDisplayChange() {
-        pendingDisplayChangeTask?.cancel()
-        pendingDisplayChangeTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(Self.displayChangeDebounce * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            self?.refreshDisplayState()
-        }
+        // The display pipeline is reconfiguring; stop in-flight gamma writes (HDR poll loop)
+        // until the coalesced refresh re-establishes a known-good state.
+        xdrController.suspendBoostWrites()
+        scheduleRefresh(after: Self.displayChangeDebounce)
     }
 
     /// Tear down the gamma boost and overlays before the displays go dark, so the system's own
@@ -144,18 +146,34 @@ final class AppController: NSObject, NSApplicationDelegate {
     /// handler brings the boost back once the fade has settled.
     @objc
     private func handleWillSleep() {
-        pendingWakeRefreshTask?.cancel()
-        pendingDisplayChangeTask?.cancel()
+        pendingRefreshTask?.cancel()
+        pendingRefreshTask = nil
+        pendingRefreshFireAt = .distantPast
         xdrController.disable()
     }
 
     @objc
     private func handleScreensDidWake() {
-        pendingWakeRefreshTask?.cancel()
-        pendingWakeRefreshTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(Self.wakeRefreshDelay * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            self?.refreshDisplayState()
+        refreshNotBefore = Date().addingTimeInterval(Self.wakeRefreshDelay)
+        scheduleRefresh(after: Self.wakeRefreshDelay)
+    }
+
+    /// Single coalescing scheduler for deferred refreshes. Keeps the latest of the requested
+    /// fire time, any already-pending fire time, and the wake gate — so a reconfiguration
+    /// notification arriving right after wake can never pull the refresh into the fade window.
+    private func scheduleRefresh(after delay: TimeInterval) {
+        let fireAt = max(Date().addingTimeInterval(delay), refreshNotBefore, pendingRefreshFireAt)
+        pendingRefreshFireAt = fireAt
+        pendingRefreshTask?.cancel()
+        pendingRefreshTask = Task { @MainActor [weak self] in
+            let wait = fireAt.timeIntervalSinceNow
+            if wait > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+            }
+            guard !Task.isCancelled, let self else { return }
+            self.pendingRefreshTask = nil
+            self.pendingRefreshFireAt = .distantPast
+            self.refreshDisplayState()
         }
     }
 
